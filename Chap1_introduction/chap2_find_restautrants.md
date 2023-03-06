@@ -251,18 +251,7 @@ Sans utiliser la méthode count dans un premier temps comptez le nombre de resta
 
 Indications : pour itérer sur une requête vous utiliserez l'une des deux syntaxes suivantes :
 
-```js
-// 1
-let count = 0;
-db.collection.find().forEach((doc) => console.log(doc));
 
-// 2
-let count = 0;
-const myCursor = db.users.find(restriction);
-while (myCursor.hasNext()) {
-  myCursor.next();
-}
-```
 
 
 Solution 
