@@ -251,9 +251,6 @@ Sans utiliser la méthode count dans un premier temps comptez le nombre de resta
 
 Indications : pour itérer sur une requête vous utiliserez l'une des deux syntaxes suivantes :
 
-
-
-
 Solution 
 
 ```js
@@ -291,7 +288,7 @@ db.inventory.find({ quantity: { $lt: 20 } });
 D'autres filtres :
 
 ```js
-// différent de
+// différent de !=
 $ne
 "number" : {"$ne" : 10}
 
@@ -313,11 +310,11 @@ $and
   { "notes" : { "$lt" : 5  } }
 ]
 
-// négation
+// négation  notes <= 10
 $not
 "notes" : {"$not" : {"$lt" : 10} }
 
-// existe
+// existe par rapport à une clé
 $exists
 "notes" : {"$exists" : true}
 
@@ -369,6 +366,20 @@ MongoDB utilise Perl compatible regular expressions (i.e. "PCRE" ) version 8.42 
 
 ## 03 Exercices liste
 
+### 00.1
+
+Combien de restaurant italien
+
+```js
+db.restaurants.find({ cuisine : 'Italian' } ).count()
+```
+
+Combien de restaurants italien dans le quartier de Brooklyn
+
+```js
+db.restaurants.find( { $and : [ { cuisine : 'Italian' }, { borough : 'Brooklyn' } ] } ).count()
+```
+
 ### 01. Combien y a t il de restaurants qui font de la cuisine italienne et qui ont eu un score de 10 au moins ?
 
 *Affichez également le nom, les scores et les coordonnées GPS de ces restaurants. Ordonnez les résultats par ordre décroissant sur les noms des restaurants.*
@@ -379,6 +390,27 @@ MongoDB utilise Perl compatible regular expressions (i.e. "PCRE" ) version 8.42 
 db.collection.findOne(query, restriction).sort({ key: 1 }); // 1 pour ordre croissant et -1 pour décroissant
 ```
 
+```js
+
+db.restaurants.find( 
+  {
+    $and: [ 
+      { cuisine: 'Italian' }, 
+      { 'grades.score': { $gte : 10 } } 
+    ] 
+  },
+  {
+    _id: 0,
+    name: 1, 
+    'grades.address.coord': 1,
+    'grades.score': 1,
+
+  } ).sort({
+    name: -1
+  }).pretty()
+
+```
+
 ### 02 03. Quels sont les restaurants qui ont eu un grade A et un score supérieur ou égal à 20 ? Affichez uniquement les noms et ordonnez les par ordre décroissant. Affichez le nombre de résultat.
 
 Remarque pour la dernière partie de la question utilisez la méthode count :
@@ -387,27 +419,113 @@ Remarque pour la dernière partie de la question utilisez la méthode count :
 db.collection.findOne(query, restriction).count();
 ```
 
+```js
+db.restaurants.find( { 
+  $and : [
+    { "grades.grade": "A" }, 
+    { "grades.score": { $gte: 20 } },
+  ]
+}
+    ,
+    {
+      _id: 0,
+      "grades.grade": 1,
+      "grades.score": 1,
+    }
+  ).sort({ name: -1 });
+```
+
+Que des scores supérieurs à 20 uniquement
+
+```js
+db.restaurants.find( {
+$and : [
+  { "grades.score": { $not : {$lt: 20 }} },
+  { "grades.score" : { $exists : true }}
+]
+}
+    
+    ,
+    {
+      _id: 0,
+      "grades.grade": 1,
+      "grades.score": 1,
+    }
+  ).sort({ name: -1 });
+```
+
+
 ### 04. A l'aide de la méthode distinct trouvez tous les quartiers distincts de NY.
 
 ```js
 db.restaurants.distinct("borough");
 ```
 
-### 05. Trouvez tous les types de restaurants dans le quartiers du Bronx. Vous pouvez là encore utiliser distinct et un deuxième paramètre pour préciser sur quel ensemble vous voulez appliquer cette close :
+### 05. Trouvez tous les types de restaurants dans le quartiers du Bronx. Vous pouvez là encore utiliser distinct et un deuxième paramètre pour préciser sur quel ensemble vous voulez appliquer cette close:
 
 ```js
 db.restaurants.distinct("field", { key: "value" });
 ```
 
+```js
+db.restaurants.distinct("cuisine", { borough: "Bronx" });
+```
+
 ### 06 Trouvez tous les restaurants dans le quartier du Bronx qui ont eu 4 grades.
 
+```js
+db.restaurants
+  .find(
+    { borough: "Bronx", grades: { $size: 4 } },
+    { _id: 0, name: 1, "address.coord": 1 }
+  )
+  .pretty();
+```
+
+Exactement 4
+
+```js
+db.restaurants
+  .find(
+    { },
+    { grades: { $elemMatch: { school: 102 } } }
+  )
+  .pretty();
+```
+
 ### 07. Sélectionnez les restaurants dont le grade est A ou B dans le Bronx.
+
+```js
+db.restaurants.find({
+  $and : [
+    {borough: "Bronx"},
+   { "grades.grade": { $in: ["A", "B"] }}
+  ] }).count();
+```
 
 ### 08. Même question mais, on aimerait récupérer les restaurants qui ont eu à la dernière inspection (elle apparaît théoriquement en premier dans la liste des grades) un A ou B. Vous pouvez utilisez la notion d'indice sur la clé grade :
 
 ```js
 "grades.2.grade";
 ```
+```js
+
+db.restaurants.find(
+    {
+      $and: [
+        {
+          $or: [{ "grades.0.grade": "A" }, { "grades.0.grade": "B" }],
+        },
+        {
+          borough: "Bronx",
+        },
+      ],
+    },
+    { _id: 0, name: 1, grades: {$first : "$grades" } }
+  ).pretty();
+
+```
+
 
 ### 09. Sélectionnez maintenant tous les restaurants qui ont le mot "Coffee" ou "coffee" dans la propriété name du document. Puis, même question mais uniquement dans le quartier du Bronx.
 
