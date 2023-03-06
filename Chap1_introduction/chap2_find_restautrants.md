@@ -238,11 +238,11 @@ Cela correspondrait (...) en SQL à la requête suivante :
 
 ```sql
 SELECT
-`name`,
+name,
 borough
 FROM restaurants
 WHERE borough = "Brooklyn"
-AND ( `name` LIKE '/^B/' OR `name` LIKE '/^W/')
+AND ( name LIKE '/^B/' OR name LIKE '/^W/')
 ```
 
 ## 02 Exercice compter le nombre de restaurants
@@ -264,10 +264,24 @@ while (myCursor.hasNext()) {
 }
 ```
 
+
+Solution 
+
+```js
+let count = 0;
+const myCursor = db.users.find({borough: 'Brooklyn'});
+while (myCursor.hasNext()) {
+  myCursor.next();
+  count+=1;
+}
+
+console.log(count);
+```
+
 Puis comparez le résultat avec la méthode count :
 
 ```js
-db.collection.findOne(query, restriction).count();
+db.collection.find(query, restriction).count();
 ```
 
 ### Présentation des opérateurs MongoDB pour le filtrage des données
