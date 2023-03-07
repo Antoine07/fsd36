@@ -745,7 +745,22 @@ db.restaurants.find(
 
 1. Affichez la liste des restaurants dont le nom commence et se termine par une voyelle.
 
+```js
+db.restaurants.find(
+  {name: /^[aeiou].*[aeiou]$/i},
+  {name: 1, _id: 0}
+)
+```
+
 2. Affichez la liste des restaurants dont le nom commence et se termine par une même lettre.
+
+```js
+db.restaurants.find(
+  {name: /^(\w).*\1$/i},
+  {name: 1, _id: 0}
+)
+```
+
 
 Remarque vous pouvez soit programmer cet affichage, soit directement utiliser une regex. Dans ce cas lisez les indications suivantes :
 
