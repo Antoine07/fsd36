@@ -637,16 +637,48 @@ db.restaurants
 
 ```js
 // Exemple
-db.restaurants.find(
-{
-  name: /Coffee|Restaurant/i
-},
-{
-  _id: 0, name: 1
+
+// directement
+
+const query =  {
+  $and: [
+    {
+      $or: [{ borough: "Bronx" }, { borough: "Brooklyn" }],
+    },
+    {
+      name: /coffee/i,
+    },
+    { grades: { $size: 4 } },
+  ]
 }
-).forEach( doc => print(doc))
 
+// approche fonctionnelle
+db.restaurants.find( query, { _id: 0, name: 1, "grades.date": 1}).forEach( ({name, grades, borough}) => {
+  print(`Name: ${name.toUpperCase()}`)
+  print(`Dates first: ${grades.shift().date.toLocaleDateString()}, Date last: ${grades.pop().date.toLocaleDateString()}`)
+  print(`Boroug: ${borough}`)
+});
 
+// Différentes approches 
+db.restaurants.find( query,
+{ 
+  _id: 0, 
+  name: { $toUpper: "$name" },  
+  grades:[ 
+    {"firstDate" : { $first : "$grades.date" }},
+    {"lastDate" : { $last : "$grades.date" }}
+  ] 
+})
+
+db.restaurants.find( query,
+{ 
+  _id: 0, 
+  name: { $toUpper: "$name" },  
+  grades:[ 
+    { $first : "$grades.date" },
+    { $last : "$grades.date" }
+  ] 
+})
 ```
 
 ## Recherche de restaurants à proximité d'un lieu
@@ -661,7 +693,7 @@ db.restaurants.createIndex({ "address.coord": "2dsphere" });
 
 ### 04 Exercice GPS
 
-Après avoir créer l'index 2dsphere ci-dessus, trouvez tous les restaurants qui sont à 5 miles autour du point GPS suivant, donnez leurs noms, leur quartier ainsi que les coordonnées GPS en console, aidez-vous des indications ci-après :
+Après avoir créer l'index **2dsphere** ci-dessus, trouvez tous les restaurants qui sont à 5 miles autour du point GPS suivant, donnez leurs noms, leur quartier ainsi que les coordonnées GPS en console, aidez-vous des indications ci-après :
 
 ```js
 const coordinate = [-73.961704, 40.662942];
