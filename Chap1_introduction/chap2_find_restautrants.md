@@ -706,6 +706,26 @@ Indications : vous utiliserez la syntaxe suivante avec les opérateurs MongoDB :
 { $nearSphere: { $geometry: { type: "Point", coordinates: coordinate }, $maxDistance: VOTRE_DISTANCE_EN_METRE } }
 ```
 
+
+```js
+const coordinate = [-73.961704, 40.662942];
+const meter_per_mile = 1609.34; // 1 mile en mètre
+
+db.restaurants.find(
+  {
+    "address.coord" : {
+      $nearSphere:
+      { $geometry: { type: "Point", coordinates: coordinate },
+      $maxDistance: 5 * meter_per_mile
+      }
+    }
+  },
+  { _id:0, borough : { $toUpper: "$borough"} ,  name : { $toUpper: "$name"}, "address.coord": 1}
+)
+
+
+```
+
 ## 05 Exercice Recherche par rapport à la date (répondre sans coder)
 
 Sans exécutez la requête suivante, qu'affiche-t-elle ?
