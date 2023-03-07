@@ -730,6 +730,8 @@ db.restaurants.find(
 
 Sans exécutez la requête suivante, qu'affiche-t-elle ?
 
+Trouvez tous les noms des restaurants et leurs quartiers dont la dernière notation a été réalisé le 30/12/2013
+
 ```js
 db.restaurants.find(
   {
@@ -751,6 +753,7 @@ Remarque vous pouvez soit programmer cet affichage, soit directement utiliser un
 () // les parenthèses captures une chaîne de caractère(s)
 \1 // permet de récupérer la première chaîne de caractère(s) capturée(s)
 \2 // permet de récupérer la deuxième chaîne de caractère(s) capturée(s)
+
 ```
 
 
