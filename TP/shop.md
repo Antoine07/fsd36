@@ -1,13 +1,5 @@
 # TP Shop Update Delete
 
-## Partie 3 inventory
-
-Vous pouvez également trier vos documents à l'aide de la méthode sort, keySort correspond à un système de clé/valeur : { k : 1 }
-
-```js
-db.collection.find(restriction, projection).sort(keySort)
-```
-
 ## Création d'une nouvelle base de données shop
 
 Créez une base de données **shop** et insérez les données suivantes, utilisez la méthode insertMany qui est plus sémantique :
