@@ -602,11 +602,52 @@ db.restaurants.find({
 ... },
 ...  { _id: 0, name: 1}
 )
+
+const noSb = () => db.restaurants.find( { name: /^(?!Starbucks)/ } , { _id: 0, name: 1 }) ;
+
+const r = db.restaurants.find( { name: /^(?!Starbucks)/ } , { _id: 0, name: 1 }).toArray().map( ({name}) => (name))
+
 ```
 
 ### 11. Trouvez tous les restaurants qui ont dans leur nom le mot clé coffee, qui sont dans le bronx ou dans Brooklyn, qui ont eu exactement 4 appréciations (grades).
 
+```js
+db.restaurants
+  .find(
+    {
+      $and: [
+        {
+          $or: [{ borough: "Bronx" }, { borough: "Brooklyn" }],
+        },
+        {
+          name: /coffee/i,
+        },
+        { grades: { $size: 4 } },
+      ],
+    },
+    { _id: 0, name: 1, grades: 1 }
+  )
+  .pretty();
+
+
+```
+
 ### 12. Reprenez la question 11 et affichez tous les noms de ces restaurants en majuscule avec leur dernière date et permière date d'évaluation.
+
+
+```js
+// Exemple
+db.restaurants.find(
+{
+  name: /Coffee|Restaurant/i
+},
+{
+  _id: 0, name: 1
+}
+).forEach( doc => print(doc))
+
+
+```
 
 ## Recherche de restaurants à proximité d'un lieu
 
