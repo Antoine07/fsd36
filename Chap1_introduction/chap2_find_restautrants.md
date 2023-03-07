@@ -474,23 +474,10 @@ db.restaurants.distinct("cuisine", { borough: "Bronx" });
 ### 06 Trouvez tous les restaurants dans le quartier du Bronx qui ont eu 4 grades.
 
 ```js
-db.restaurants
-  .find(
+db.restaurants.find(
     { borough: "Bronx", grades: { $size: 4 } },
-    { _id: 0, name: 1, "address.coord": 1 }
-  )
-  .pretty();
-```
-
-Exactement 4
-
-```js
-db.restaurants
-  .find(
-    { },
-    { grades: { $elemMatch: { school: 102 } } }
-  )
-  .pretty();
+    { _id: 0, name: 1, "address.coord": 1, grades : 1 }
+  ).pretty();
 ```
 
 ### 07. Sélectionnez les restaurants dont le grade est A ou B dans le Bronx.
@@ -508,6 +495,8 @@ db.restaurants.find({
 ```js
 "grades.2.grade";
 ```
+
+
 ```js
 
 db.restaurants.find(
@@ -526,13 +515,62 @@ db.restaurants.find(
 
 ```
 
-
 ### 09. Sélectionnez maintenant tous les restaurants qui ont le mot "Coffee" ou "coffee" dans la propriété name du document. Puis, même question mais uniquement dans le quartier du Bronx.
 
-Comptez également leurs nombres total et calculez la différences avec Coffee et coffee. Utilisez une Regex :
+Comptez également leurs nombres total et calculez la différence numérique entre les restaurants Coffee et coffee. Utilisez une Regex :
 
 ```js
 /[aA]lan/
+```
+
+```js
+
+db.restaurants.find({
+  name: /coffee/
+}, {
+  _id: 0,
+  name: 1
+})
+
+db.restaurants.find({
+  name: /Coffee/
+}, {
+  _id: 0,
+  name: 1
+})
+
+// En utilisant l'option i insensible à la casse 
+db.restaurants.find({
+  name: /coffee/i
+}, {
+  _id: 0,
+  name: 1
+})
+
+// Différence entre les nombres de restaurants par rapport à leurs noms coffee et Coffee
+
+const countcoffee = () => db.restaurants.find({
+  name: /coffee/
+}).count()
+
+const countCoffee = () => db.restaurants.find({
+  name: /Coffee/
+}).count()
+
+
+print(`La différence nb de restaurant(s) coffee/Coffee en valeur absolue: ${Math.abs( countcoffee - countCoffee )}`)
+
+// update 
+
+db.restaurants.updateOne({name: /Coffee/}, {
+  $set:{ name: 'coffee' }
+})
+
+// on peut tous les remettre en majuscule 
+
+db.restaurants.updateMany({name: /coffee/}, {
+  $set:{ name: 'Coffee' }
+})
 ```
 
 ### 10. Trouvez tous les restaurants avec les mots Coffee ou Restaurant et qui ne contiennent pas le mot Starbucks. Puis, même question mais uniquement dans le quartier du Bronx.
