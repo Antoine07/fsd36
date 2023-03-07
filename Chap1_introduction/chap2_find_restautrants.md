@@ -573,7 +573,36 @@ db.restaurants.updateMany({name: /coffee/}, {
 })
 ```
 
-### 10. Trouvez tous les restaurants avec les mots Coffee ou Restaurant et qui ne contiennent pas le mot Starbucks. Puis, même question mais uniquement dans le quartier du Bronx.
+### 10. Trouvez tous les restaurants avec les mots Coffee ou Restaurant et qui ne contiennent pas le mot Starbucks. Puis, même question, mais uniquement dans le quartier du Bronx.
+
+```js
+
+// deux mots que l'on cherche dans le nom
+ db.restaurants.find({
+ name: /Coffee|Restaurant/i
+},
+    { _id: 0, name: 1}
+ )
+
+// solutions 1
+db.restaurants.find({
+  $and: [
+    {name: /Coffee|Restaurant/i}, 
+    {name: {$nin: [ /Starbucks/i] }}
+  ]
+},
+ { _id: 0, name: 1}
+)
+
+db.restaurants.find({
+...   $and: [
+...     {name: /Coffee|Restaurant/i}, 
+...     {name: {$nin: [ /Starbucks/i] }}
+...   ]
+... },
+...  { _id: 0, name: 1}
+)
+```
 
 ### 11. Trouvez tous les restaurants qui ont dans leur nom le mot clé coffee, qui sont dans le bronx ou dans Brooklyn, qui ont eu exactement 4 appréciations (grades).
 
