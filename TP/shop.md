@@ -250,23 +250,46 @@ db.inventory.find({
 )
 ```
 
-### 11. Affichez le nom des sociétés qui ont 2 tags blanks uniquement.
+### 11. Affichez le nom des sociétés qui ont 3 tags blanks uniquement.
 
 ```js
 // 
-let res = []
-db.inventory.find({
-  tags : "blank"
-}, 
-{_id: 0, society: 1, tags: 1}
-).forEach(({tags, society})=>{
-    let count = 0 ;
-    for(const tag of tags){
-        if( tag === 'blank') count+=1 ;
+function searchTag({ max, tag}){
+    let res = [];
+    db.inventory.find({
+        tags : "blank"
+        }, 
+        {_id: 0, society: 1, tags: 1}
+    ).forEach(({tags, society})=>{
+        let count = 0 ;
+        for(const t of tags) if( t === tag ) count+=1 ;
+        if(count == max) res.push({tags, society});
+    });
+        
+    return res;
+}
 
-        if(count == 2) {res.push({tags, society}); break; }
-    }
-});
+print(searchTag( { max : 3, tag : 'blank' } ));
+```
 
-print(res);
+Approche fonctionnelle dans le find, avec le tag expr
+
+
+```js
+
+db.inventory.find({tags: "blank", $expr: { $function: {
+    body: function(tags, society){
+        let [res, count] = [[], 0]; // initialisation des variables
+        for(const tag of tags) if( tag === 'blank' ) count+=1 ;
+        if(count == 3) {
+            res.push({tags, society});
+
+            return res;
+        }
+        
+    },
+    args: ["$tags", "$society"],
+    lang: "js"
+}}}, { tags : 1, _id : 0, society: 1})
+
 ```
