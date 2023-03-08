@@ -1,5 +1,13 @@
 # TP Shop Update Delete
 
+## Partie 3 inventory
+
+Vous pouvez également trier vos documents à l'aide de la méthode sort, keySort correspond à un système de clé/valeur : { k : 1 }
+
+```js
+db.collection.find(restriction, projection).sort(keySort)
+```
+
 ## Création d'une nouvelle base de données shop
 
 Créez une base de données **shop** et insérez les données suivantes, utilisez la méthode insertMany qui est plus sémantique :
@@ -113,11 +121,42 @@ db.inventory.insertMany( [{
 
 ### 01. Affichez tous les articles de type journal. Et donnez la quantité total de ces articles (propriété qty). Pensez à faire un script en JS.
 
+```js
+let total = 0;
+db.inventory.find({type: "journal"}, {_id: 0, society: 1, qty: 1}).forEach(({society, qty}) => {
+    total += qty
+});
+
+print(total);
+```
+
+En aggregate on peut utiliser le regroupement par rapport à une clé du document.
+
+```js
+db.inventory.aggregate([
+    { $match: { type: "journal"} },
+    { $group:{ _id: "$type", count: { $sum: 1 }, total: { $sum: "$qty"}} }
+])
+```
+
 ### 02. Affichez les noms de sociétés depuis 2018 avec leur quantité (sans agrégation)
+
+```js
+db.inventory.find({year: { $gte: 2018}}, {_id: 0, society: 1, qty: 1});
+
+db.inventory.aggregate([
+    { $match: { year: { $gte: 2018} } },
+    { $project: { _id: 0, society: 1, qty: 1 }}
+])
+```
 
 ### 03. Affichez les types des articles pour les sociétés dont le nom commence par A.
 
 Vous utiliserez une expression régulière classique : /^A/
+
+```js
+db.inventory.find({society: /^A/}, {_id: 0, type: 1, society: 1});
+```
 
 ### 04. Affichez le nom des sociétés dont la quantité d'articles est supérieur à 45.
 
@@ -135,16 +174,55 @@ Utilisez les opérateurs supérieur ou inférieur :
 
 // inférieur <
 // {field: {$lt: value} }
+```
 
+```js
+db.inventory.find({ qty: {$gt: 45 } }, {_id: 0, type: 1, qty: 1});
 ```
 
 ### 05. Affichez le nom des sociétés dont la quantité d'article(s) est strictement supérieur à 45 et inférieur à 90.
 
+```js
+db.inventory.find({ $and: [ 
+    { qty: { $gt: 45} }, 
+    { qty: { $lt: 90} }  
+]}, 
+{_id: 0, society: 1, qty: 1}).sort({qty: 1})
+```
+
 ### 06. Affichez le nom des sociétés dont le statut est A ou le type est journal.
+
+```js
+db.inventory.find({ $or: [ 
+    { status: "A" }, 
+    { type: "journal" }  
+]}, 
+{_id: 0, society: 1, qty: 1, status: 1})
+```
 
 ### 07. Affichez le nom des sociétés dont le statut est A ou le type est journal et la quantité inférieur strictement à 100.
 
+```js
+db.inventory.find({ 
+    $and: [ 
+        { $or: [{status: "A"}, {type: "journal"}]},
+        { qty: { $lt: 100} }  
+]}, 
+{_id: 0, type: 1, qty: 1, status: 1})
+```
+
 ### 08. Affichez le type des articles qui ont un prix de 0.99 ou 1.99 et qui sont true pour la propriété sale ou ont une quantité strictement inférieur à 45.
+
+```js
+db.inventory.find({
+    $and:[
+        {$or: [{price: .99}, {price: 1.99}]},
+        {$or: [{sale: true}, {qty:{ $lt: 45 }}]},
+    ]
+}, 
+{_id: 0, type: 1, qty: 1, sale: 1, price: 1}
+)
+```
 
 ### 09. Affichez le nom des sociétés et leur(s) tag(s) si et seulement si ces sociétés ont au moins un tag.
 
@@ -154,4 +232,41 @@ Vous pouvez utiliser l'opérateur d'existance de Mongo pour vérifier que la pro
 { field: { $exists: <boolean> } }
 ```
 
+```js
+db.inventory.find({
+   tags: { $exists: true }
+}, 
+{_id: 0, society: 1, tags: 1}
+)
+```
+
 ### 10. Affichez le nom des sociétés qui ont au moins un tag blank.
+
+```js
+db.inventory.find({
+   tags: "blank"
+}, 
+{_id: 0, society: 1, tags: 1}
+)
+```
+
+### 11. Affichez le nom des sociétés qui ont 2 tags blanks uniquement.
+
+```js
+// 
+let res = []
+db.inventory.find({
+  tags : "blank"
+}, 
+{_id: 0, society: 1, tags: 1}
+).forEach(({tags, society})=>{
+    let count = 0 ;
+    for(const tag of tags){
+        if( tag === 'blank') count+=1 ;
+
+        if(count == 2) {res.push({tags, society}); break; }
+    }
+});
+
+print(res);
+```
