@@ -164,6 +164,27 @@ Vous pouvez utiliser l'opérateur d'existance de Mongo pour vérifier que la pro
 
 ### 10. Affichez le nom des sociétés qui ont au moins un tag blank.
 
+
+### 11.  Affichez le nom des sociétés qui ont 3 tags blanks uniquement.
+
+```js
+db.inventory.find({tags: "blank", $expr: { $function: {
+    body: function(tags, society){
+        let [res, count] = [[], 0]; // initialisation des variables
+        for(const tag of tags) if( tag === 'blank' ) count+=1 ;
+        if(count == 3) {
+            res.push({tags, society});
+
+            return res;
+        }
+        
+    },
+    args: ["$tags", "$society"],
+    lang: "js"
+}}}, { tags : 1, _id : 0, society: 1})
+
+```
+
 ## Modification du curseurs
 
 ```js
@@ -283,7 +304,34 @@ Utilisez la méthode updateMany qui mettra l'ensemble des documents à jour.
 
 1. Augmentez de 50% la quantité de chaque document qui a un status C ou D.
 
-2. Augmentez maintenant de 150% les documents ayant un status A ou B et au moins 3 blanks dans leurs tag.
+```js
+db.inventory.updateMany({ status: { $in: [ "C", "D" ] } }, { $mul: { qty: 1.5 } }) 
+```
+
+2. Augmentez maintenant de 150% les documents ayant un status A ou B et au moins 3 blanks dans leurs tags.
+
+```js
+db.inventory.updateMany({
+  $and: [
+  {status: {$in: ["A", "B" ]}}, 
+  { $expr: { $function: {
+    body: function(tags, society){
+        let [res, count] = [[], 0]; // initialisation des variables
+        for(const tag of tags) if( tag === 'blank' ) count+=1 ;
+        if(count == 3) {
+            res.push({tags, society});
+
+            return res;
+        }
+    },
+    args: ["$tags", "$society"],
+    lang: "js"
+  }} }
+  ]
+}, { $mul: { qty: 2.5 } } )
+
+db.inventory.find({}, { qty: 1, tags : 1, _id : 0})
+```
 
 ## 03 Exercice ajouter un champ et calculer
 
@@ -291,13 +339,33 @@ Dans cet exercice vous pouvez utiliser updateMany pour insérer un nouveau champ
 
 - 1. Ajoutez un champ **scores** de type **array** avec le score 19 pour les entreprises ayant une **qty** supérieure ou égale à 75.
 
+```js
+db.inventory.updateMany({ qty: { $gte: 75 }}, { $set: {scores: [19]} }) 
+```
+
 - 2. Puis mettre à jour les entreprises ayant au moins une lettre a ou A dans leurs noms de société et ajouter leur un score 11 (champ scores).
+
+```js
+db.inventory.updateMany({ society: /a/i }, { $push: { scores: 11 } }) 
+```
 
 - 3. Affichez les docs qui ont un score de 11
 
+```js
+db.inventory.find({ scores: 11 }, { _id:0, score:1, society:1 }) 
+```
+
 - 4. Ajoutez une clé **comment** pour les sociétés Alex et ajouter un commentaire : "Hello Alex". 
 
+```js
+db.inventory.updateMany({ society: "Alex" }, { $set: { comment: "Hello Alex" } }) 
+```
+
 - 5. Affichez maintenant tous les docs qui n'ont pas la clé comment.
+
+```js
+db.inventory.find({ comment: { $exists : false } }, { _id:0, comment:1, society:1 });
+```
 
 ## Méthode unset
 
@@ -317,6 +385,12 @@ Supprimez la propriété level se trouvant dans un/les document(s). Vérifiez qu
 
 Vérifiez que le champ **level** n'existe plus après suppression.
 
+```js
+   db.inventory.updateMany(
+      { level: { $exists: true } },
+      { $unset: { level: "" } }
+   )
+```
 
 ## Opérateur switch
 
@@ -411,6 +485,26 @@ Ajoutez la propriété **label** pour les documents ayant la propriété tags un
 - si le nombre de tags est strictement supérieur à 3 : AA
 - Et B sinon.
 
+
+```js
+db.inventory.updateMany({ tags : { $exists : true }}, 
+
+  [{ $set:{
+    label:{
+      $switch:{
+        branches:[
+          {case: {$gt: [{$size: "$tags"}, 3 ]}, then: "AA"},
+          {case: {$gt: [{$size: "$tags"}, 1 ]}, then: "A"}
+        ],
+        default: "B",
+      },
+    },
+  },
+  }
+  ]
+)
+```
+
 ## db.collection.deleteOne
 
 La méthode suivante permet de supprimer un document à l'aide d'une condition :
@@ -478,3 +572,6 @@ db.inventory.aggregate( [
 { "_id" : null, "count" : 8 }
 ```
 
+### 07 Exercice
+
+Calculer le total des quantités par société
