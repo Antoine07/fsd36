@@ -575,3 +575,26 @@ db.inventory.aggregate( [
 ### 07 Exercice
 
 Calculer le total des quantités par société
+
+```js
+db.inventory.aggregate([
+  {$group: {
+    _id: "$society",
+    total: { $sum: "$qty"}
+  }}
+])
+```
+
+Les totaux supérieurs ou égale à 75, attention à l'ordre des commandes, on fera ici le match après le group pour agir sur la clé total 
+
+```js
+db.inventory.aggregate([
+  {$group: {
+    _id: "$society",
+    total: { $sum: "$qty"}
+  }},
+  {$match : { total: { $gte: 75}}},
+  
+])
+
+```
