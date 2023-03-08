@@ -180,7 +180,7 @@ db.students.find().sort( { name: 1 } ).limit( 5 )
 db.students.find().limit( 5 ).sort( { name: 1 } )
 ```
 
-## Suppression un document ou d'une collection
+## Suppression d'un document ou d'une collection
 
 Repartons de la collection inventory, la méthode updateOne permet de modifier un document selon un critère de recherche.
 
@@ -219,7 +219,7 @@ db.inventory.updateOne(
    { status: "B" },
    {
      $set: { "size.uom": "cm", status: "X" },
-     $currentDate: { lastModified: true }
+     $currentDate: { lastModified: true } // notifier à Mongo que l'on vient de faire une modification
    }
 )
 ```
