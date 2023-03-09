@@ -130,6 +130,46 @@ Le résultat final devrait ressembler à ceci :
 // … etc
 ```
 
+```js
+
+db.restaurants.aggregate([
+    {
+        $match: {
+            // cela fait un AND on en a un peu marre des accolades dans tous les sens ... 
+            cuisine: "American",
+            "grades.grade" : "A"
+        }
+    },
+    {
+        $project: {
+            _id: 0,
+            cuisine: 1,
+            grades: 1,
+            fullAddress: { 
+                $concat: [
+                    "$address.building", 
+                    " ", 
+                    "$address.street", 
+                    ", ",
+                    "$address.zipcode"
+                ]
+            },
+            fullName: {
+                 $concat: [
+                    "$name", 
+                    " ", 
+                    "(",
+                    { $toUpper: "$borough" },
+                    ")"
+                ]
+            }
+        }
+    },
+    { $out: "out_cuisine_american" }
+])
+
+```
+
 ---
 
 ### Groupement avec le stage `$group`
