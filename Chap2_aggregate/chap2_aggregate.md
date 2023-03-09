@@ -293,6 +293,15 @@ db.sales.insertMany([
   {  "restaurant_id" : "5e79995fee344ac7b3cde78a", "agency" : "xyz" , "price" : NumberDecimal("700000.5"),  "date" : ISODate("2015-09-10T08:43:00Z") },
   {  "restaurant_id" : "5e79995fee344ac7b3cde781", "agency" : "abc" , "price" : NumberDecimal("1000000") , "date" : ISODate("2016-02-06T20:20:13Z") },
 ])
+
+db.sales.insertOne(
+  {  restaurant_id: "5e79995fee344ac7b3cde781", agency : "abc" , price : NumberDecimal("1000000") },
+)
+
+// invalid au niveau du type 
+db.sales.insertOne(
+  {  restaurant_id: "5e79995fee344ac7b3cde781", agency : "abc" , price : 1000000 },
+)
 ```
 
 Voici comment on peut faire une requête SQL qui compterait le nombre d'items dans la collection ci-dessus :
