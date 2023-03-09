@@ -333,6 +333,36 @@ db.sales.aggregate( [
 
 - 2. Quelles sont les totaux dans ce regroupement qui sont supérieurs ou égaux à 950000 ?
 
+
+```js
+// 1.
+db.sales.aggregate( [
+  {
+    $group: {
+       _id: "$agency",
+       total: { $sum: "$price" }
+    }
+  }
+] )
+
+// 2.
+
+db.sales.aggregate( [
+  {
+    $group: {
+       _id: "$agency",
+       total: { $sum: "$price" }
+    }
+  },
+  {
+    $match: {
+        total: { $gte: 950000 }
+    }
+  }
+] )
+
+```
+
 *Remarques : vous pouvez également appliquer une condition de recherche par regroupement (HAVING) en utilisant l'opérateur suivant après l'opérateur de regroupement. Dans l'absolu vous pouvez donc enchaînner plusieurs opérateur match/group/match/group ...*
 
 ```js
@@ -343,9 +373,49 @@ db.sales.aggregate( [
 
 - 1. On aimerait maintenant avoir tous les noms et id des restaurants par type de cuisine et quartier. Limitez l'affichage à deux résultats.
 
+```js
+db.restaurants.aggregate( [
+  {
+    $group: {
+       _id: { cuisine : "$cuisine", borough: "$borough" },
+       names: { $push: { name: "$name", restautrant_id : "$restautrant_id"} }
+    }
+  }
+] )
+```
+
 - 2. Affichez maintenant tous les noms de restaurant Italiens par quartier.
 
+```js
+db.restaurants.aggregate( [
+  { 
+    $match : { cuisine : "Italian" } 
+  },
+  {
+    $group: {
+       _id:  { borough: "$borough" } ,
+       names: { $push:  "$name" }
+    }
+  }
+] )
+```
+
 - 3. Affichez également, pour chaque restaurant, la moyenne de ses scores. Et ordonnez vos résultats par ordre de moyenne décroissante.
+
+```js
+
+db.restaurants.aggregate([
+    { $unwind: "$grades" },
+     {
+    $group: {
+       _id:  "$name" , 
+       avg: { $avg: "$grades.score"}
+    }
+  },
+  { $sort: { avg: -1 }}
+])
+
+```
 
 Vous pouvez également le faire par type de restaurant et par quartier.
 
@@ -363,6 +433,73 @@ Remarques : vous pouvez utiliser l'opérateur suivant pour enregistrer une nouve
 { $out : "top5" }
 ```
 
+```js
+db.restaurants.aggregate([
+    { $match : { cuisine : "Italian" } },
+    { $unwind : "$grades" } ,
+    { $project: {
+        _id: 0,
+        name: 1,
+        avg: { $avg: "$grades.score" },
+        borough: 1
+    }},
+    { $sort: { avg: -1 } },
+    { $limit: 5 },
+    { $out: "top5Italian" }
+])
+```
+
+
 - 5 Récupérez le nombre de restaurants par quartier ainsi que leur type de cuisine qui contiennent AU MOINS un score supérieur ou égal à 30. Ordonnez le résultat par ordre décroissant de nombre de restaurant.
 
+```js
+db.restaurants.aggregate([
+    { $match : { "grades.score" : { $gte: 30 } } },
+    { $group: {_id: { cuisine: "$cuisine", borough: "$borough" }, count: { $sum: 1 }} },
+    { $sort: { count: -1 } }
+])
+```
+
 - 6 Cherchez les meilleurs restaurants en proposant une requête de votre choix, faites le par quartier. Puis donnez la moyenne des scores de ces restaurants.
+
+```js
+db.restaurants.aggregate([
+    { $unwind : "$grades" } ,
+    { $project: {
+        _id: 0,
+        name: 1,
+        avg: { $avg: "$grades.score" },
+        borough: 1
+    }},
+    { $sort: { avg: -1 } },
+    { $limit: 1 },
+    { $out: "topRestaurant" }
+])
+``` 
+
+- 7 Calculez le nombre de grade A par restaurant 
+
+
+```js
+db.restaurants.aggregate([
+    {
+        $addFields: {
+            gradeA: {
+                $function:{
+                    body: function(grades){
+
+                        return grades.filter(g => g.grade === "A" ).length
+                    },
+                    args: ["$grades"],
+                    lang: "js"
+                }
+            }
+        }
+    },
+    { $project: { gradeA: 1, name: 1, _id: 0, restaurant_id: 1}},
+    { $group: { _id: "$gradeA", restaurant_id: { $push : "$restaurant_id" }  }},
+    { $sort: { gradeA: -1 } },
+    { $limit: 1 },
+    { $out: "toptop" }
+])
+```
