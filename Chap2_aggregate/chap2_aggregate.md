@@ -193,11 +193,15 @@ db.restaurants.aggregate([
 { "_id" : "Staten Island", "total" : 73 }
 */
 
-// on les regroupe tous
+// on les regroupe avec projection
 db.restaurants.aggregate([
-  
-    { $group : {"_id" : "$borough", "total" : {$sum : 1}}},
-])
+    { $group : {_id: "$borough", total : {$sum : 1}, names: { $push: {$concat:[ "$name", " ","id: ", "$restaurant_id" ]} } } },
+    { $project : {_id: 1 , names: 1}},
+    { $out: "names_restaurants_by_borough"}
+]);
+
+// 
+db.names_restaurants_by_borough.findOne().names[0]
 ```
 
 Nous pouvons également organiser la requête en JS de manière plus lisible.
