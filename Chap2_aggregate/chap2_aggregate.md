@@ -15,7 +15,7 @@ db.collection.aggregate([
         { $sort : { <field> : - 1}}, 
 ])
 
-
+------------ pipe 1
 // filtre les contenus ~ find
 { $match : {}}
 
@@ -27,6 +27,39 @@ db.collection.aggregate([
 
 // sort
 { $sort : {}}
+------------
+
+// on peut avec les pipelines de commandes répéter les commandes dans l'ordre proposé
+
+------------  pipe 2
+// filtre les contenus fonction du groupement précédent
+{ $match : {}}
+
+// le second paramètre du find projection
+{ $project : {}}
+
+// group opérateur d'aggrégation
+{ $group : {}}
+
+// sort
+{ $sort : {}}
+------------
+
+------------  pipe 3
+// filtre les contenus ~ find
+{ $match : {}}
+
+// le second paramètre du find projection
+{ $project : {}}
+
+// group opérateur d'aggrégation
+{ $group : {}}
+
+// sort
+{ $sort : {}}
+------------
+
+// ...
 
 ```
 
