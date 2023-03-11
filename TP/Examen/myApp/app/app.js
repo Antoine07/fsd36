@@ -29,17 +29,18 @@ async function statAC(db) {
 
   const res = await restaurants.aggregate([
       {
+
         $addFields: {
           gradeA: {
             $function: {
-              body: function (grades) {
+              body: `function (grades) {
                 const res = {
                   A: grades.filter((g) => g.grade === "A").length,
                   D: grades.filter((g) => g.grade === "D").length,
                 };
 
                 return res;
-              },
+              }`,
               args: ["$grades"],
               lang: "js",
             },
